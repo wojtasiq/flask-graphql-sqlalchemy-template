@@ -1,6 +1,7 @@
 from graphene_sqlalchemy import SQLAlchemyObjectType
-from graphene_sqlalchemy_filter import FilterSet
-from models.user import ModelRole
+from graphene_sqlalchemy_filter import FilterSet, FilterableConnectionField
+from models.user import ModelRole, ModelUser
+from services.graphql.schemas.schema_user import UserFilter
 import graphene
 
 
@@ -20,6 +21,11 @@ class RoleFilter(FilterSet):
         }
 
 
+class RoleNestedFilters(FilterableConnectionField):
+    filters = {
+        ModelUser: UserFilter(),
+    }
+
 
 class Role(SQLAlchemyObjectType, RoleAttribute):
     """People node."""
@@ -27,3 +33,4 @@ class Role(SQLAlchemyObjectType, RoleAttribute):
     class Meta:
         model = ModelRole
         interfaces = (graphene.relay.Node,)
+        connection_field_factory = RoleNestedFilters.factory
