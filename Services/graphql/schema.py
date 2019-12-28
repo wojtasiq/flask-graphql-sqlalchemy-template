@@ -14,4 +14,8 @@ class Query(graphene.ObjectType):
     roles = FilterableConnectionField(schema_role.Role, filters=schema_role.RoleFilter())
 
 
-schema = graphene.Schema(query=Query)
+class Mutation(graphene.ObjectType):
+    updateUser = schema_user.UpdateUser.Field()
+
+
+schema = graphene.Schema(query=Query, mutation=Mutation)

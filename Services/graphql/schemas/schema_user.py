@@ -1,6 +1,8 @@
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from graphene_sqlalchemy_filter import FilterSet
 from models.user import ModelUser
+from services.database import db
+from services import utils
 import graphene
 
 
@@ -25,3 +27,26 @@ class User(SQLAlchemyObjectType, UserAttribute):
     class Meta:
         model = ModelUser
         interfaces = (graphene.relay.Node,)
+
+
+class UpdateUserInput(graphene.InputObjectType, UserAttribute):
+    """Arguments to update a User."""
+
+
+class UpdateUser(graphene.Mutation):
+    """Update a person."""
+    user = graphene.Field(lambda: User, description="User updated by this mutation.")
+
+    class Arguments:
+        userData = UpdateUserInput(required=True)
+
+    def mutate(self, info, userData):
+        print(userData)
+        user = db.session.query(ModelUser).get(userData['id'])
+        for key, value in userData.items():
+            if key != 'id':
+                user.__setattr__(key, value)
+        db.session.commit()
+        user = db.session.query(ModelUser).get(userData['id'])
+
+        return UpdateUser(user=user)
