@@ -1,0 +1,9 @@
+graphene
+graphene-sqlalchemy
+SQLAlchemy
+Flask
+Flask-SQLAlchemy
+Flask-GraphQL
+python-dotenv
+flask_jwt_extended
+graphene_sqlalchemy_filter
