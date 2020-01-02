@@ -7,3 +7,4 @@ Flask-GraphQL
 python-dotenv
 flask_jwt_extended
 graphene_sqlalchemy_filter
+argon2-cffi

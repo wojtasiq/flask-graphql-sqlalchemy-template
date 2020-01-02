@@ -14,21 +14,22 @@ class Query(graphene.ObjectType):
     users = FilterableConnectionField(schema_user.User, filters=schema_user.UserFilter())
     role = graphene.relay.Node.Field(schema_role.Role)
     roles = FilterableConnectionField(schema_role.Role, filters=schema_role.RoleFilter())
+    # me = graphene.relay.Node.Field(schema_user.User)
 
-    def resolve_user(self, info):
-        flask_jwt_extended.verify_jwt_in_request_optional()
-        user = flask_jwt_extended.get_jwt_identity()
-        # user = flask_jwt_extended.current_user()
-        print(user)
-        if user is None:
-            return []
-        query = schema_user.User.get_query(info)  # SQLAlchemy query
-        return query.all()
+    # def resolve_user(self, info):
+    #     user = flask_jwt_extended.get_jwt_identity()
+    #     # user = flask_jwt_extended.current_user()
+    #     print(user)
+    #     if user is None:
+    #         return []
+    #     query = schema_user.User.get_query(info)  # SQLAlchemy query
+    #     return query.all()
 
 
 class Mutation(graphene.ObjectType):
     updateUser = schema_user.UpdateUser.Field()
     login = schema_security.Login.Field()
+    register = schema_security.Register.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

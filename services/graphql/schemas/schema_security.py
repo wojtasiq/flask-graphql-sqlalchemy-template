@@ -1,45 +1,58 @@
 import graphene
 import flask_jwt_extended
+from models.user import ModelUser, ModelRole
+from services.database import db
+from argon2 import PasswordHasher, exceptions
 
 
 class Login(graphene.Mutation):
     class Arguments:
-        username = graphene.String(required=True)
+        email = graphene.String(required=True)
         password = graphene.String(required=True)
 
     token = graphene.String()
     refresh_token = graphene.String()
+    ok=graphene.Boolean()
 
-    def mutate(self, info, password, username):
-        token = flask_jwt_extended.create_access_token(identity='wojtasiq')
-        refresh_token = flask_jwt_extended.create_refresh_token(identity='wojtasiq')
+    def mutate(self, info, password, email):
 
-        return Login(token=token, refresh_token=refresh_token)
+        user = ModelUser.query.filter_by(email=email).first()
+        if user:
+            ph = PasswordHasher()
+            try:
+                correct_pass = ph.verify(user.password, password)
+            except exceptions.VerifyMismatchError:
+                return Login(ok=False)
+
+            if correct_pass:
+                token = flask_jwt_extended.create_access_token(identity=user.email)
+                refresh_token = flask_jwt_extended.create_refresh_token(identity=user.email)
+
+                return Login(token=token, refresh_token=refresh_token, ok=True)
+
+        return Login(ok=False)
 
 
-# class RefreshMutation(graphene.Mutation):
-#     class Arguments(object):
-#         refresh_token = graphene.String()
-#
-#     result = graphene.Field(RefreshUnion)
-#
-#     @mutation_jwt_refresh_token_required
-#     def mutate(self, info, refresh_token):
-#         return RefreshMutation(
-#             RefreshField(acces_token=create_access_token(get_jwt_identity()), message="Refresh success"))
-#
-#
-# class RegisterMutation(graphene.Mutation):
-#     class Arguments(object):
-#         id = graphene.String()
-#         username = graphene.String()
-#         password = graphene.String()
-#         description = graphene.String()
-#
-#     result = graphene.Field(ResponseMessageField)
-#
-#     @staticmethod
-#     def mutate(root, info, **kwargs):
-#         AccountModel(**kwargs).save()
-#
-#         return RegisterMutation(ResponseMessageField(is_success=True, message="Successfully registered"))
+class Register(graphene.Mutation):
+    class Arguments:
+        email = graphene.String(required=True)
+        password = graphene.String(required=True)
+
+    ok = graphene.Boolean()
+
+    def mutate(self, info, password, email):
+        user = ModelUser.query.filter_by(email=email).first()
+
+        if user:
+            return Register(ok=False)
+
+        user = ModelUser()
+        user.email = email
+        ph = PasswordHasher()
+        user.password = ph.hash(password)
+        user.roles.append(ModelRole.query.filter_by(name='user').first())
+
+        db.session.add(user)
+        db.session.commit()
+
+        return Register(ok=True)

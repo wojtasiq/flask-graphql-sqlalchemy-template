@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from app import app
+from argon2 import PasswordHasher
 import app_init
 load_dotenv()
 
@@ -15,6 +16,8 @@ from models.user import ModelUser, ModelRole, ModelUsersModelRoles
 db.drop_all()
 db.create_all()
 
+ph = PasswordHasher()
+
 role_admin = ModelRole(name='admin', label='Admin')
 role_user = ModelRole(name='user', label='User')
 
@@ -25,8 +28,8 @@ db.session.add(role_user)
 db.session.commit()
 
 # Users
-user_admin = ModelUser(email='admin@admin.com', password='admin')
-user_normal = ModelUser(email='user@user.com', password='admin')
+user_admin = ModelUser(email='admin@admin.com', password=ph.hash('admin'))
+user_normal = ModelUser(email='user@user.com', password=ph.hash('user'))
 
 user_admin.roles.append(role_admin)
 user_admin.roles.append(role_user)
